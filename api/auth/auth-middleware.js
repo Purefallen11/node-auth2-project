@@ -1,4 +1,7 @@
 const { JWT_SECRET } = require("../secrets"); // use this secret!
+const jwt = require('jsonwebtoken')
+const Users = require('../users/users-model');
+const { options } = require("./auth-router");
 
 const restricted = (req, res, next) => {
   /*
@@ -16,6 +19,19 @@ const restricted = (req, res, next) => {
 
     Put the decoded token in the req object, to make life easier for middlewares downstream!
   */
+  const token = req.header.authorization
+  if (!token) {
+    next({status: 401, message: 'Token Required'})
+  } else {
+    jwt.verify(token, JWT_SECRET, (err, decodedToken) => {
+      if (err) {
+        next({status: 401, message: "Token Invalid"})
+      } else {
+        req.decodedToken = decodedToken
+        next()
+      }
+    })
+  }
 }
 
 const only = role_name => (req, res, next) => {
@@ -29,6 +45,11 @@ const only = role_name => (req, res, next) => {
 
     Pull the decoded token from the req object, to avoid verifying it again!
   */
+  if (role_name === req.decodedToken.role_name) {
+    next()
+  } else {
+    next({status: 403, message: 'This is not for you'})
+  }
 }
 
 

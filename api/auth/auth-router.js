@@ -57,6 +57,8 @@ const {username, password} = req.body
         const token = makeToken(user)
         res.status(200).json(`${user} is back`)
         token
+      } else {
+        next({status: 401, message: 'Invalid credentials'})
     }
   })
 });
